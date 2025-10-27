@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using Duckov.UI;
 using HarmonyLib;
@@ -6,6 +7,7 @@ using ItemStatsSystem;
 using ItemStatsSystem.Data;
 using SodaCraft.Localizations;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.UI.ProceduralImage;
 
@@ -13,13 +15,18 @@ namespace SendToBaseBtn
 {
     public class ModBehaviour : Duckov.Modding.ModBehaviour
     {
-        public const string BtnUITextKey = "SendToBase";
+        public const string BtnUITextKey = "UI_SendToBase";
         private Harmony? _harmony;
         private bool _isInit;
+
+        public static int CanSendTimes = 5;
+        public static int AlreadySendTimes = 0;
 
         protected override void OnAfterSetup()
         {
             // Debug.Log("SendToBaseBtn模组：OnAfterSetup方法被调用");
+
+            LoadConfig();
             if (!_isInit)
             {
                 // Debug.Log("SendToBaseBtn模组：执行修补");
@@ -28,6 +35,11 @@ namespace SendToBaseBtn
                 _isInit = true;
                 // Debug.Log("SendToBaseBtn模组：修补完成");
             }
+
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
 
         protected override void OnBeforeDeactivate()
@@ -38,6 +50,59 @@ namespace SendToBaseBtn
                 if (_harmony != null)
                     _harmony.UnpatchAll();
             // Debug.Log("SendToBaseBtn模组：执行取消修补完毕");
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        }
+
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Debug.Log($"加载场景：{scene.name}，模式：{mode.ToString()}");
+            if (scene.name == "Base_SceneV2")
+            {
+                AlreadySendTimes = 0;
+            }
+        }
+
+        void OnSceneUnloaded(Scene scene)
+        {
+            Debug.Log($"卸载场景：{scene.name}");
+
+            if (scene.name == "Base_SceneV2")
+            {
+                AlreadySendTimes = 0;
+            }
+        }
+
+        private void LoadConfig()
+        {
+            try
+            {
+                string configPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    "info.ini");
+                if (File.Exists(configPath))
+                {
+                    string[] lines = File.ReadAllLines(configPath);
+                    foreach (string line in lines)
+                    {
+                        if (line.StartsWith("SendTimes="))
+                        {
+                            string value = line.Substring("SendTimes=".Length).Trim();
+                            if (int.TryParse(value, out int times))
+                            {
+                                CanSendTimes = times;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.Log("SendToBaseBtn模组：未找到info.ini文件，使用默认值");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"SendToBaseBtn模组：读取配置文件时出错：{e.Message}，使用默认值");
+            }
         }
     }
 
@@ -52,7 +117,16 @@ namespace SendToBaseBtn
             // 创建"发送到基地"按钮
             if (_sendToBaseButton == null)
             {
-                LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, "发送到基地");
+                if (LevelManager.Instance.IsBaseLevel)
+                {
+                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, "发送到基地");
+                }
+                else
+                {
+                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey,
+                        $"发送到基地({ModBehaviour.CanSendTimes - ModBehaviour.AlreadySendTimes}/{ModBehaviour.CanSendTimes})");
+                }
+
                 // 使用反射获取私有的 btn_Wishlist 字段（标记按钮）
                 var wishlistField = AccessTools.Field(typeof(ItemOperationMenu), "btn_Wishlist");
                 var btnWishlist = (Button)wishlistField.GetValue(__instance);
@@ -61,13 +135,6 @@ namespace SendToBaseBtn
                 var buttonObj = GameObject.Instantiate(btnWishlist.gameObject, btnWishlist.transform.parent);
                 _sendToBaseButton = buttonObj.GetComponent<Button>();
                 _sendToBaseButton.name = "SendToBaseBtn";
-                // var transform = _sendToBaseButton.transform.parent.Find("Text (TMP)");
-                // if (transform == null)
-                // {
-                //     Debug.Log("未找到字体父类");
-                //     return;
-                // }
-
                 // 获取并修改文本
                 var textComponent = _sendToBaseButton.GetComponentInChildren<TextLocalizor>();
                 if (textComponent != null)
@@ -77,22 +144,23 @@ namespace SendToBaseBtn
 
                 // 修改按钮颜色
                 var imageComponent = _sendToBaseButton.transform.Find("BG").GetComponent<ProceduralImage>();
-                if (imageComponent != null) imageComponent.color = new Color(0.2f, 0.8f, 0.12f); // 背景
-
-                // // 设置按钮大小和位置
-                // var rectTransform = _sendToBaseButton.GetComponent<RectTransform>();
-                // rectTransform.sizeDelta = new Vector2(200, 60);
-                // rectTransform.localPosition = new Vector3(0, -120, 0);
+                if (imageComponent != null)
+                {
+                    if (ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
+                    {
+                        imageComponent.color = new Color(0.8f, 0.18f, 0.11f); // 背景
+                    }
+                    else
+                    {
+                        imageComponent.color = new Color(0.2f, 0.8f, 0.12f); // 背景
+                    }
+                }
 
                 // 添加点击事件
                 _sendToBaseButton.onClick.AddListener(() => { SendToBase(__instance); });
             }
 
-            // // 使用反射获取私有的 Dumpable 属性
-            // var dumpableProperty = AccessTools.Property(typeof(ItemOperationMenu), "Dumpable");
-            // bool isDumpable = (bool)dumpableProperty.GetValue(__instance);
-
-            // 只有当物品可以丢弃时才显示发送到基地按钮
+            // 显示发送到基地按钮
             _sendToBaseButton?.gameObject.SetActive(true);
         }
 
@@ -101,6 +169,12 @@ namespace SendToBaseBtn
             // Debug.Log("SendToBaseBtn模组：执行发送到基地");
             try
             {
+                if (ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
+                {
+                    NotificationText.Push("已发送次数已达上限");
+                    return;
+                }
+
                 // 使用反射获取私有的 TargetItem 属性
                 var targetItemProperty = AccessTools.Property(typeof(ItemOperationMenu), "TargetItem");
                 var targetItem = (Item)targetItemProperty.GetValue(menu);
@@ -111,7 +185,17 @@ namespace SendToBaseBtn
                 targetItem.DestroyTree();
                 menu.Close();
 
-                NotificationText.Push("已发送到[马蜂自提点]");
+                NotificationText.Push($"{targetItem.DisplayName} 已发送到[马蜂自提点]");
+                ModBehaviour.AlreadySendTimes += 1;
+                if (LevelManager.Instance.IsBaseLevel)
+                {
+                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, "发送到基地");
+                }
+                else
+                {
+                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey,
+                        $"发送到基地({ModBehaviour.CanSendTimes - ModBehaviour.AlreadySendTimes}/{ModBehaviour.CanSendTimes})");
+                }
             }
             catch (Exception e)
             {
