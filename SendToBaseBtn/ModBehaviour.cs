@@ -159,7 +159,16 @@ namespace SendToBaseBtn
                 // 添加点击事件
                 _sendToBaseButton.onClick.AddListener(() => { SendToBase(__instance); });
             }
-
+            // 修改按钮颜色
+            var imageComp = _sendToBaseButton.transform.Find("BG").GetComponent<ProceduralImage>();
+            if (ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
+            {
+                imageComp.color = new Color(0.8f, 0.18f, 0.11f); // 背景
+            }
+            else
+            {
+                imageComp.color = new Color(0.2f, 0.8f, 0.12f); // 背景
+            }
             // 显示发送到基地按钮
             _sendToBaseButton?.gameObject.SetActive(true);
         }
