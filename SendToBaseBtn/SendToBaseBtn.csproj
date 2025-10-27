@@ -7,14 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\TeamSoda.*" />
-        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\ItemStatsSystem.dll" />
-        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\Unity*" />
-        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\SodaLocalization.dll" />
-        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\Plugins.dll" />
+        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\TeamSoda.*"/>
+        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\ItemStatsSystem.dll"/>
+        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\Unity*"/>
+        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\SodaLocalization.dll"/>
+        <Reference Include="$(DuckovPath)\Duckov_Data\Managed\Plugins.dll"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Lib.Harmony" Version="2.4.1" />
+        <PackageReference Include="Lib.Harmony" Version="2.4.1"/>
     </ItemGroup>
 
 </Project>
