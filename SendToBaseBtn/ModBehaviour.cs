@@ -19,7 +19,7 @@ namespace SendToBaseBtn
         private Harmony? _harmony;
         private bool _isInit;
 
-        public static int CanSendTimes = 5;
+        public static int CanSendTimes = 0;
         public static int AlreadySendTimes = 0;
 
         protected override void OnAfterSetup()
@@ -56,7 +56,7 @@ namespace SendToBaseBtn
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            Debug.Log($"加载场景：{scene.name}，模式：{mode.ToString()}");
+            // Debug.Log($"加载场景：{scene.name}，模式：{mode.ToString()}");
             if (scene.name == "Base_SceneV2")
             {
                 AlreadySendTimes = 0;
@@ -65,7 +65,7 @@ namespace SendToBaseBtn
 
         void OnSceneUnloaded(Scene scene)
         {
-            Debug.Log($"卸载场景：{scene.name}");
+            // Debug.Log($"卸载场景：{scene.name}");
 
             if (scene.name == "Base_SceneV2")
             {
@@ -117,7 +117,7 @@ namespace SendToBaseBtn
             // 创建"发送到基地"按钮
             if (_sendToBaseButton == null)
             {
-                if (LevelManager.Instance.IsBaseLevel)
+                if (LevelManager.Instance.IsBaseLevel || ModBehaviour.CanSendTimes == 0)
                 {
                     LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, "发送到基地");
                 }
@@ -146,7 +146,7 @@ namespace SendToBaseBtn
                 var imageComponent = _sendToBaseButton.transform.Find("BG").GetComponent<ProceduralImage>();
                 if (imageComponent != null)
                 {
-                    if (ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
+                    if (ModBehaviour.CanSendTimes != 0 && ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
                     {
                         imageComponent.color = new Color(0.8f, 0.18f, 0.11f); // 背景
                     }
@@ -159,9 +159,10 @@ namespace SendToBaseBtn
                 // 添加点击事件
                 _sendToBaseButton.onClick.AddListener(() => { SendToBase(__instance); });
             }
+
             // 修改按钮颜色
             var imageComp = _sendToBaseButton.transform.Find("BG").GetComponent<ProceduralImage>();
-            if (ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
+            if (ModBehaviour.CanSendTimes != 0 && ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
             {
                 imageComp.color = new Color(0.8f, 0.18f, 0.11f); // 背景
             }
@@ -169,6 +170,7 @@ namespace SendToBaseBtn
             {
                 imageComp.color = new Color(0.2f, 0.8f, 0.12f); // 背景
             }
+
             // 显示发送到基地按钮
             _sendToBaseButton?.gameObject.SetActive(true);
         }
@@ -178,7 +180,7 @@ namespace SendToBaseBtn
             // Debug.Log("SendToBaseBtn模组：执行发送到基地");
             try
             {
-                if (ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
+                if (ModBehaviour.CanSendTimes != 0 && ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
                 {
                     NotificationText.Push("已发送次数已达上限");
                     return;
@@ -195,13 +197,14 @@ namespace SendToBaseBtn
                 menu.Close();
 
                 NotificationText.Push($"{targetItem.DisplayName} 已发送到[马蜂自提点]");
-                ModBehaviour.AlreadySendTimes += 1;
-                if (LevelManager.Instance.IsBaseLevel)
+
+                if (ModBehaviour.CanSendTimes == 0 || LevelManager.Instance.IsBaseLevel)
                 {
                     LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, "发送到基地");
                 }
                 else
                 {
+                    ModBehaviour.AlreadySendTimes += 1;
                     LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey,
                         $"发送到基地({ModBehaviour.CanSendTimes - ModBehaviour.AlreadySendTimes}/{ModBehaviour.CanSendTimes})");
                 }
