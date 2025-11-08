@@ -117,14 +117,44 @@ namespace SendToBaseBtn
             // 创建"发送到基地"按钮
             if (_sendToBaseButton == null)
             {
+                var sendToBaseText = "Send To Base";
+                if (LocalizationManager.CurrentLanguage == SystemLanguage.ChineseSimplified ||
+                    LocalizationManager.CurrentLanguage == SystemLanguage.ChineseTraditional)
+                {
+                    sendToBaseText = "发送到基地";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Korean)
+                {
+                    sendToBaseText = "기지로 보내기";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Japanese)
+                {
+                    sendToBaseText = "基地に送る";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Spanish)
+                {
+                    sendToBaseText = "Enviar a la base";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.French)
+                {
+                    sendToBaseText = "Envoyer à la base";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.German)
+                {
+                    sendToBaseText = "Zur Basis senden";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Russian)
+                {
+                    sendToBaseText = "Отправить на базу";
+                }
                 if (LevelManager.Instance.IsBaseLevel || ModBehaviour.CanSendTimes == 0)
                 {
-                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, "发送到基地");
+                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, sendToBaseText);
                 }
                 else
                 {
                     LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey,
-                        $"发送到基地({ModBehaviour.CanSendTimes - ModBehaviour.AlreadySendTimes}/{ModBehaviour.CanSendTimes})");
+                        $"{sendToBaseText}({ModBehaviour.CanSendTimes - ModBehaviour.AlreadySendTimes}/{ModBehaviour.CanSendTimes})");
                 }
 
                 // 使用反射获取私有的 btn_Wishlist 字段（标记按钮）
@@ -182,7 +212,38 @@ namespace SendToBaseBtn
             {
                 if (ModBehaviour.CanSendTimes != 0 && ModBehaviour.AlreadySendTimes >= ModBehaviour.CanSendTimes)
                 {
-                    NotificationText.Push("已发送次数已达上限");
+                    string limitReachedText = "Send limit reached";
+                    if (LocalizationManager.CurrentLanguage == SystemLanguage.ChineseSimplified ||
+                        LocalizationManager.CurrentLanguage == SystemLanguage.ChineseTraditional)
+                    {
+                        limitReachedText = "已发送次数已达上限";
+                    }
+                    else if (LocalizationManager.CurrentLanguage == SystemLanguage.Korean)
+                    {
+                        limitReachedText = "전송 횟수 제한에 도달했습니다";
+                    }
+                    else if (LocalizationManager.CurrentLanguage == SystemLanguage.Japanese)
+                    {
+                        limitReachedText = "送信回数が上限に達しました";
+                    }
+                    else if (LocalizationManager.CurrentLanguage == SystemLanguage.Spanish)
+                    {
+                        limitReachedText = "Límite de envíos alcanzado";
+                    }
+                    else if (LocalizationManager.CurrentLanguage == SystemLanguage.French)
+                    {
+                        limitReachedText = "Limite d'envoi atteinte";
+                    }
+                    else if (LocalizationManager.CurrentLanguage == SystemLanguage.German)
+                    {
+                        limitReachedText = "Sendelimit erreicht";
+                    }
+                    else if (LocalizationManager.CurrentLanguage == SystemLanguage.Russian)
+                    {
+                        limitReachedText = "Достигнут лимит отправки";
+                    }
+
+                    NotificationText.Push(limitReachedText);
                     return;
                 }
 
@@ -195,18 +256,56 @@ namespace SendToBaseBtn
                 targetItem.Detach();
                 targetItem.DestroyTree();
                 menu.Close();
+                
+                if (LocalizationManager.CurrentLanguage == SystemLanguage.ChineseSimplified ||
+                    LocalizationManager.CurrentLanguage == SystemLanguage.ChineseTraditional)
+                {
+                    NotificationText.Push($"{targetItem.DisplayName} 已发送到[马蜂自提点]");
+                }
+                else
+                {
+                    NotificationText.Push($"{targetItem.DisplayName} already send to base");
+                }
 
-                NotificationText.Push($"{targetItem.DisplayName} 已发送到[马蜂自提点]");
-
+                var sendToBaseText = "Send To Base";
+                if (LocalizationManager.CurrentLanguage == SystemLanguage.ChineseSimplified ||
+                    LocalizationManager.CurrentLanguage == SystemLanguage.ChineseTraditional)
+                {
+                    sendToBaseText = "发送到基地";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Korean)
+                {
+                    sendToBaseText = "기지로 보내기";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Japanese)
+                {
+                    sendToBaseText = "基地に送る";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Spanish)
+                {
+                    sendToBaseText = "Enviar a la base";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.French)
+                {
+                    sendToBaseText = "Envoyer à la base";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.German)
+                {
+                    sendToBaseText = "Zur Basis senden";
+                }
+                else if (LocalizationManager.CurrentLanguage == SystemLanguage.Russian)
+                {
+                    sendToBaseText = "Отправить на базу";
+                }
                 if (ModBehaviour.CanSendTimes == 0 || LevelManager.Instance.IsBaseLevel)
                 {
-                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, "发送到基地");
+                    LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey, sendToBaseText);
                 }
                 else
                 {
                     ModBehaviour.AlreadySendTimes += 1;
                     LocalizationManager.SetOverrideText(ModBehaviour.BtnUITextKey,
-                        $"发送到基地({ModBehaviour.CanSendTimes - ModBehaviour.AlreadySendTimes}/{ModBehaviour.CanSendTimes})");
+                        $"{sendToBaseText}({ModBehaviour.CanSendTimes - ModBehaviour.AlreadySendTimes}/{ModBehaviour.CanSendTimes})");
                 }
             }
             catch (Exception e)
